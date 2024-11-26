@@ -10,15 +10,34 @@ This project is an interactive portfolio designed to mimic the look and feel of 
 - **File Explorer**: Navigate through different sections like Home, Downloads, and more.
 - **Terminal**: A simulated terminal for executing commands.
 
+## Requirements
+
+- Node.js
+- npm (Node Package Manager)
+- Git (optional)
+
+## Usage (locally)
+
+1. Clone the repository or download ZIP:
+    ```sh
+    git clone https://github.com/qrexpy/ubuntu-portfolio
+    cd ubuntu-portfolio
+    ```
+
+2. Install http-server globally:
+    ```sh
+    npm install -g http-server
+    ```
+
+3. Start the local server:
+    ```sh
+    http-server -p 8000
+    ```
+
+4. Open in your browser:
+   - Navigate to [http://localhost:8000](http://localhost:8000) or to the IPs you got from terminal
+
 ## To-Do
 
 1. Add more functionality to the animations.
 2. Make it more similar to actual Ubuntu.
-
-## Usage (locally)
-
-1. Clone the repository:
-    ```sh
-    git clone https://github.com/qrexpy/ubuntu-portfolio
-    ```
-2. Open `index.html` in your web browser to view the portfolio.
