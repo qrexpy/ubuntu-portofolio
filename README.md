@@ -41,3 +41,4 @@ This project is an interactive portfolio designed to mimic the look and feel of 
 
 1. Add more functionality to the animations.
 2. Make it more similar to actual Ubuntu.
+3. Fix browser
