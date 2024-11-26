@@ -21,7 +21,7 @@
     }
     
     body {
-        background: url('wallpaper.webp') center/cover no-repeat fixed;
+        background: url('https://github.com/qrexpy/ubuntu-portofolio/blob/9e35aeb2a91ab035c226af2cdad3e943bc829974/wallpaper.webp') center/cover no-repeat fixed;
         background-color: var(--ubuntu-grey); /* Fallback color */
         height: 100vh;
         overflow: hidden;
@@ -1072,10 +1072,10 @@
                 </div>
                 <div class="player-right-section">
                     <div class="track-list">
-                        <div class="track" onclick="playAudio('Mii Editor - Mii Maker (Wii U) Music.mp3')">
+                        <div class="track" onclick="playAudio('audio/Mii Editor - Mii Maker (Wii U) Music.mp3')">
                             Mii Editor - Mii Maker
                         </div>
-                        <div class="track" onclick="playAudio('dj quads - its near.mp3')">
+                        <div class="track" onclick="playAudio('audio/dj quads - its near.mp3')">
                             DJ Quads - Its Near
                         </div>
                     </div>
@@ -1184,9 +1184,7 @@
     let dragTarget = null;
     let dragOffsetX = 0;
     let dragOffsetY = 0;
-    
-    let mediaSource = null; // Add this variable to track the media source
-    
+        
     function dragMouseDown(e) {
         // Only allow dragging from the header
         if (!e.target.closest('.window-header')) return;
@@ -1338,172 +1336,164 @@
     let visualizerCanvas = null;
     let visualizerCtx = null;
     let animationFrame = null;
-    
+    let mediaSource = null;
+
     function initializeAudioVisualizer() {
-        visualizerCanvas = document.getElementById('audio-visualizer');
-        if (!visualizerCanvas) {
-            console.warn('Audio visualizer canvas not found');
-            return;
-        }
-        
-        visualizerCtx = visualizerCanvas.getContext('2d');
-        
-        // Set canvas size only if canvas exists
-        visualizerCanvas.width = visualizerCanvas.offsetWidth;
-        visualizerCanvas.height = visualizerCanvas.offsetHeight;
+    visualizerCanvas = document.getElementById('audio-visualizer');
+    if (!visualizerCanvas) {
+        console.warn('Audio visualizer canvas not found');
+        return;
     }
-    
+
+    visualizerCtx = visualizerCanvas.getContext('2d');
+
+    // Set explicit canvas dimensions
+    visualizerCanvas.width = visualizerCanvas.offsetWidth;
+    visualizerCanvas.height = visualizerCanvas.offsetHeight;
+    }
+
     function playAudio(filename) {
-        if (!filename) {
-            console.warn('No filename provided for playAudio');
-            return;
+    if (!filename) {
+        console.warn('No filename provided for playAudio');
+        return;
+    }
+
+    // Stop current audio if playing
+    if (currentAudio) {
+        currentAudio.pause();
+        if (mediaSource) {
+        mediaSource.disconnect();
         }
-    
-        // Stop current audio if playing
-        if (currentAudio) {
-            currentAudio.pause();
-            if (mediaSource) {
-                mediaSource.disconnect();
-            }
-            currentAudio = null;
-        }
-        
-        if (animationFrame) {
-            cancelAnimationFrame(animationFrame);
-        }
-    
-        // Create new audio context if needed
-        if (!audioContext) {
-            try {
-                audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                analyser = audioContext.createAnalyser();
-                analyser.fftSize = 1024;
-                analyser.smoothingTimeConstant = 0.85;
-            } catch (e) {
-                console.error('Could not create audio context:', e);
-                return;
-            }
-        }
-    
-        // Create and setup new audio element with error handling
+        currentAudio = null;
+    }
+
+    if (animationFrame) {
+        cancelAnimationFrame(animationFrame);
+    }
+
+    // Create new audio context if needed
+    if (!audioContext) {
         try {
-            currentAudio = new Audio(filename);
-            currentAudio.addEventListener('error', (e) => {
-                console.error('Audio error:', e);
-            });
-            
-            currentAudio.addEventListener('canplay', () => {
-                try {
-                    mediaSource = audioContext.createMediaElementSource(currentAudio);
-                    mediaSource.connect(analyser);
-                    analyser.connect(audioContext.destination);
-                    
-                    currentAudio.play().catch(e => console.error('Playback error:', e));
-                    
-                    // Update UI only if elements exist
-                    const titleElement = document.querySelector('.track-title');
-                    if (titleElement) {
-                        titleElement.textContent = filename.split('/').pop();
-                    }
-                    
-                    updatePlayPauseButton();
-                    drawVisualizer();
-                } catch (e) {
-                    console.error('Error setting up audio:', e);
-                }
-            });
-    
-            // Update track selection UI with null checks
-            const tracks = document.querySelectorAll('.track');
-            if (tracks) {
-                tracks.forEach(track => {
-                    track.classList.remove('active');
-                    if (track.textContent.trim() === filename.split('/').pop().replace('.mp3', '')) {
-                        track.classList.add('active');
-                    }
-                });
-            }
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        analyser = audioContext.createAnalyser();
+        analyser.fftSize = 1024;
+        analyser.smoothingTimeConstant = 0.85;
         } catch (e) {
-            console.error('Error creating audio element:', e);
+        console.error('Could not create audio context:', e);
+        return;
         }
     }
-    
+
+    // Create and setup new audio element with error handling
+    try {
+        currentAudio = new Audio(filename);
+
+        // Remove crossOrigin property for local files
+        // currentAudio.crossOrigin = 'anonymous';
+
+        currentAudio.addEventListener('error', (e) => {
+        console.error('Audio error:', e);
+        });
+
+        currentAudio.addEventListener('canplay', () => {
+        try {
+            mediaSource = audioContext.createMediaElementSource(currentAudio);
+            mediaSource.connect(analyser);
+            analyser.connect(audioContext.destination);
+
+            currentAudio.play().catch((e) => console.error('Playback error:', e));
+
+            // Update track title
+            const fileName = filename.substring(filename.lastIndexOf('/') + 1);
+            const decodedName = decodeURIComponent(fileName)
+            .replace('.mp3', '')
+            .replace(/_/g, ' ');
+            const titleElement = document.querySelector('.track-title');
+            if (titleElement) {
+            titleElement.textContent = decodedName;
+            }
+
+            drawVisualizer();
+        } catch (e) {
+            console.error('Error setting up audio:', e);
+        }
+        });
+
+        // Update track selection UI
+        const tracks = document.querySelectorAll('.track');
+        if (tracks) {
+        tracks.forEach((track) => {
+            track.classList.remove('active');
+            if (track.dataset.src === filename) {
+            track.classList.add('active');
+            }
+        });
+        }
+    } catch (e) {
+        console.error('Error creating audio element:', e);
+    }
+    }
+
     function drawVisualizer() {
-        // Initialize if not already done
+    // Initialize if not already done
+    if (!analyser || !visualizerCanvas || !visualizerCtx) {
+        initializeAudioVisualizer();
         if (!analyser || !visualizerCanvas || !visualizerCtx) {
-            initializeAudioVisualizer();
-            // If still not initialized after trying, return
-            if (!analyser || !visualizerCanvas || !visualizerCtx) {
-                console.warn('Could not initialize audio visualizer');
-                return;
-            }
+        console.warn('Could not initialize audio visualizer');
+        return;
         }
-    
-        const bufferLength = analyser.frequencyBinCount;
-        const dataArray = new Uint8Array(bufferLength);
-        const width = visualizerCanvas.width;
-        const height = visualizerCanvas.height;
-        const centerX = width / 2;
-        const centerY = height / 2;
-        const radius = Math.min(width, height) / 3;
-        
-        function draw() {
-            animationFrame = requestAnimationFrame(draw);
-            
-            analyser.getByteFrequencyData(dataArray);
-            
-            // Clear background
-            visualizerCtx.fillStyle = '#333333';
-            visualizerCtx.fillRect(0, 0, width, height);
-            
-            // Draw circular rainbow visualizer
-            const barCount = bufferLength;
-            const barWidth = (2 * Math.PI) / barCount;
-            
-            for (let i = 0; i < barCount; i++) {
-                const barHeight = (dataArray[i] / 255) * (radius * 0.8); // Scale bar height
-                const angle = i * barWidth;
-                
-                // Calculate rainbow color
-                const hue = (i / barCount) * 360;
-                visualizerCtx.fillStyle = `hsl(${hue}, 100%, 50%)`;
-                
-                // Calculate bar positions
-                const innerX = centerX + Math.cos(angle) * radius;
-                const innerY = centerY + Math.sin(angle) * radius;
-                const outerX = centerX + Math.cos(angle) * (radius + barHeight);
-                const outerY = centerY + Math.sin(angle) * (radius + barHeight);
-                
-                // Draw bar
-                visualizerCtx.beginPath();
-                visualizerCtx.moveTo(innerX, innerY);
-                visualizerCtx.lineTo(outerX, outerY);
-                visualizerCtx.lineWidth = 2;
-                visualizerCtx.strokeStyle = visualizerCtx.fillStyle;
-                visualizerCtx.stroke();
-                
-                // Draw connecting lines between bars
-                if (i > 0) {
-                    const prevAngle = (i - 1) * barWidth;
-                    const prevBarHeight = (dataArray[i - 1] / 255) * (radius * 0.8);
-                    const prevOuterX = centerX + Math.cos(prevAngle) * (radius + prevBarHeight);
-                    const prevOuterY = centerY + Math.sin(prevAngle) * (radius + prevBarHeight);
-                    
-                    visualizerCtx.beginPath();
-                    visualizerCtx.moveTo(prevOuterX, prevOuterY);
-                    visualizerCtx.lineTo(outerX, outerY);
-                    visualizerCtx.stroke();
-                }
-            }
-            
-            // Draw center circle
-            visualizerCtx.beginPath();
-            visualizerCtx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
-            visualizerCtx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-            visualizerCtx.stroke();
+    }
+
+    const bufferLength = analyser.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+    const width = visualizerCanvas.width;
+    const height = visualizerCanvas.height;
+    const centerX = width / 2;
+    const centerY = height / 2;
+    const radius = Math.min(width, height) / 3;
+
+    function draw() {
+        animationFrame = requestAnimationFrame(draw);
+
+        analyser.getByteFrequencyData(dataArray);
+
+        // Clear background
+        visualizerCtx.clearRect(0, 0, width, height);
+
+        // Draw circular rainbow visualizer
+        const barCount = bufferLength;
+        const barWidth = (2 * Math.PI) / barCount;
+
+        for (let i = 0; i < barCount; i++) {
+        const barHeight = (dataArray[i] / 255) * (radius * 0.8);
+        const angle = i * barWidth;
+
+        // Calculate rainbow color
+        const hue = (i / barCount) * 360;
+        visualizerCtx.strokeStyle = `hsl(${hue}, 100%, 50%)`;
+
+        // Calculate bar positions
+        const innerX = centerX + Math.cos(angle) * radius;
+        const innerY = centerY + Math.sin(angle) * radius;
+        const outerX = centerX + Math.cos(angle) * (radius + barHeight);
+        const outerY = centerY + Math.sin(angle) * (radius + barHeight);
+
+        // Draw bar
+        visualizerCtx.beginPath();
+        visualizerCtx.moveTo(innerX, innerY);
+        visualizerCtx.lineTo(outerX, outerY);
+        visualizerCtx.lineWidth = 2;
+        visualizerCtx.stroke();
         }
-        
-        draw();
+
+        // Draw center circle
+        visualizerCtx.beginPath();
+        visualizerCtx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+        visualizerCtx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+        visualizerCtx.stroke();
+    }
+
+    draw();
     }
     
     // Initialize visualizer when audio player window is opened
