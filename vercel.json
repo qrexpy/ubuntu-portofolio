@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/ubuntu-profile/:path*",
+      "destination": "/:path*"
+    }
+  ]
+}
